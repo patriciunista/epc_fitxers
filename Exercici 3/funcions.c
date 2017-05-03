@@ -19,6 +19,7 @@ void Neteja(char opcio)
 
 void MostraError(char error)
 {
+    printf(ANSI_COLOR_RED);
     if(error == 'I')
         printf("\nError, la dada introduida es incorecte.\n\n");
     else if(error == 'o')
@@ -32,12 +33,13 @@ void MostraError(char error)
     else if(error == 'p')
         printf("\nError en el processament de les dades.\n\n");
     else if(error == 't')
-        printf("\nL'alumne a modificar no s'ha trobat.\n\n");
+        printf("\nL'alumne a modificar no s'ha trobat. ");
     else if(error == 'R')
         printf("\nHi ha hagut un error al procesar la modificacio del registre.\n\n");
+    else if(error == 'M')
+        printf("\nNumero de matricula ja registrat, utilitzi la opcio per a modificar alta.\n\n");
 
-
-
+    printf(ANSI_COLOR_RESET);
     getchar();
 }
 
@@ -45,7 +47,7 @@ void MostraError(char error)
 t_alum AltaAlumne(t_alum alumne)
 {
     Neteja('P');
-    int siono;
+    int siono, repetit;
     do
     {
         printf("Digues matricula alumne (3 digits): ");
@@ -72,9 +74,9 @@ t_alum AltaAlumne(t_alum alumne)
     printf("Digues adresa alumne: ");
     scanf("%[^\n]%*c", alumne.ANT_DIR);
     printf("Digues numero de faltes: ");
-    scanf("%d%*c", &alumne.ANT_NFALT);
+    scanf("%d", &alumne.ANT_NFALT);
     printf("Digues numero de suspeses: ");
-    scanf("%d%*c", &alumne.ANT_NSUSP);
+    scanf("%d", &alumne.ANT_NSUSP);
     return alumne;
 }
 
@@ -90,7 +92,6 @@ t_movi AltaNouAlumne(t_movi nou_alumne)
 
     } while (!(nou_alumne.MV_NMAT >= 0) || !(nou_alumne.MV_NMAT < 1000));
 
-    printf("Digues matricula alumne (3 digits): ");
     printf("Digues nom alumne: ");
     scanf("%[^\n]%*c", nou_alumne.MV_NOMB);
     printf("Digues adresa alumne: ");
@@ -198,7 +199,7 @@ void AfegirRegistreNouAlum(char * path, t_movi registre)
 }
 
 void ModificarRegistre(t_alum adresa, t_movi adresaNova){
-    strcpy(adresaNova.MV_DIR, adresa.ANT_DIR);
+    strcpy(adresa.ANT_DIR, adresaNova.MV_DIR);
 }
 
 void MostraBaixaAlum(t_alum registre, char * motiu)
@@ -263,7 +264,6 @@ void MostraRegistres(char tipus)
     {
         if (!error_fitxer_nfg)
         {
-            printf("dins fitxer generat\n");
             if(fread(&alumne, sizeof(t_alum), 1, f3) > 0)
             {
                 rewind(f3);
@@ -274,7 +274,7 @@ void MostraRegistres(char tipus)
                 getchar();
             } else
                 MostraError('r');
-        } 
+        }
         else
             MostraError('F');
     }
@@ -292,7 +292,7 @@ int ProcesaDades()
     FILE * fitxer_alumnes;
     FILE * fitxer_nous_alumnes;
     FILE * nou_fitxer;
-    int error_fitxer_a = 0, error_fitxer_na = 0, error_proces = 0;
+    int error_fitxer_a = 0, error_fitxer_na = 0, error_proces = 0, nou_fitxer_tancat = 0;
     t_alum alumne;
     t_movi nou_alumne;
 
@@ -320,8 +320,8 @@ int ProcesaDades()
                 else
                     fwrite(&alumne, sizeof(alumne), 1, nou_fitxer);
             }
-        } 
-        else 
+        }
+        else
         {
             MostraError('r');
             error_proces = 1;
@@ -336,13 +336,17 @@ int ProcesaDades()
 
     if (!error_fitxer_na)
     {
-        if(fread(&nou_alumne, sizeof(nou_alumne), 1, fitxer_alumnes) > 0)
+        if(fread(&nou_alumne, sizeof(nou_alumne), 1, fitxer_nous_alumnes) > 0)
         {
-            rewind(fitxer_alumnes);
-            while(fread(&nou_alumne, sizeof(nou_alumne), 1, fitxer_alumnes) > 0)
+            rewind(fitxer_nous_alumnes);
+
+            while(fread(&nou_alumne, sizeof(nou_alumne), 1, fitxer_nous_alumnes) > 0)
             {
+                if(!nou_fitxer_tancat) fclose(nou_fitxer);
+                nou_fitxer_tancat = 1;
                 if (nou_alumne.MV_TIP == 'A')
                 { //si es una alta
+                    nou_fitxer = fopen(FICH_ALUM_FILE, "a");
                     alumne.ANT_NMAT = nou_alumne.MV_NMAT;
                     strcpy(alumne.ANT_NOMB, nou_alumne.MV_NOMB);
                     strcpy(alumne.ANT_DIR, nou_alumne.MV_DIR);
@@ -353,11 +357,11 @@ int ProcesaDades()
                 }
                 else //si es una modificacio
                 {
-                    fclose(nou_fitxer);
                     int alumneTrobat = 0;
                     FILE * temp = fopen("temp/modificacio_reg.tmp", "w");
                     nou_fitxer = fopen(FICH_ALUM_FILE, "r");
-                    
+                    nou_fitxer_tancat = 0;
+
                     if (fread(&alumne, sizeof(alumne), 1, nou_fitxer) > 0)
                     {
                         rewind(nou_fitxer);
@@ -365,43 +369,50 @@ int ProcesaDades()
                         {
                             if (alumne.ANT_NMAT == nou_alumne.MV_NMAT)
                             {
-                                ModificarRegistre(alumne, nou_alumne);
+                                strcpy(alumne.ANT_DIR, nou_alumne.MV_DIR);
                                 alumneTrobat = 1;
                             }
                             fwrite(&alumne, sizeof(t_alum), 1, temp);
                         }
-                        fclose(temp);
-                    } 
+                    }
                     else //si no hi ha cap registre en el fitxer nou
-                        MostraError('r'); 
+                        MostraError('r');
 
-                    fclose(nou_fitxer);
+                    fclose(temp);
+                    if(!nou_fitxer_tancat) fclose(nou_fitxer);
+                    nou_fitxer_tancat = 1;
 
                     if (alumneTrobat)
-                    { 
+                    {
                         /* si hem trobat alumne, per tant em modificat, copiem les noves dades del fitxer temporal */
                         nou_fitxer = fopen(FICH_ALUM_FILE, "w");
-                        temp = fopen("temp/modificacio_reg.tmp", "r");
+                        nou_fitxer_tancat = 0;
+                        temp = fopen("temp/modificacio_reg.tmp", "r"); 
 
                         if (fread(&alumne, sizeof(alumne), 1, temp) > 0)
                         {
                             rewind(temp);
                             while(fread(&alumne, sizeof(alumne), 1, temp) > 0)
                                 fwrite(&alumne, sizeof(t_alum), 1, nou_fitxer);
-
-                            fclose(temp);
                         }
                         else
                             MostraError('R');
 
-                        fclose(nou_fitxer);
+                        fclose(temp);
+                        if(!nou_fitxer_tancat) fclose(nou_fitxer);
+                        nou_fitxer_tancat = 1;
+
                     } //si no hem trobat alumne
                     else
+                    {
+                        printf("\n");
                         MostraError('t');
+                        printf("Matricula alumne proporcionada: %d. Nom: %s", nou_alumne.MV_NMAT, nou_alumne.MV_NOMB);
+                    }
                 }
-            }
-        } 
-        else 
+            } // endwhile
+        }
+        else
         {
             MostraError('r');
             error_proces = 1;
@@ -409,9 +420,6 @@ int ProcesaDades()
 
         fclose(fitxer_nous_alumnes);
     }
-    
-
-    fclose(nou_fitxer);
 
     if (error_proces)
         return 0;
@@ -421,7 +429,7 @@ int ProcesaDades()
 
 
 void PintaMenu()
-{   
+{
     Neteja('P');
     t_alum vAlum;
     t_movi nAlum;
@@ -449,9 +457,14 @@ void PintaMenu()
         case 3:
             processament = ProcesaDades();
             if (processament)
-                printf("\nDades introduides correctament!\n\n");
+            {
+                printf("\n\n\nDades introduides correctament!\n\n");
+                getchar();
+            }
             else
+            {
                 MostraError('p');
+            }
             break;
         case 4:
             printf("\n\nQuin tipus de registre voleu veure?\n");
@@ -468,7 +481,7 @@ void PintaMenu()
             else
                 MostraError('o');
             break;
-        case 5: 
+        case 5:
             exit(0);
         default:
             MostraError('o');
@@ -479,7 +492,7 @@ void PintaMenu()
 }
 
 
-void OrdenaAlum(t_alum *reg_per_ordenar, int num_linies)
+void OrdenaAlum(t_alum * reg_per_ordenar, int num_linies)
 {
   int i, j;
   for (i = 0; i < num_linies - 1; i++)
@@ -498,7 +511,7 @@ void OrdenaAlum(t_alum *reg_per_ordenar, int num_linies)
 }
 
 
-void OrdenaNouAlum(t_movi *reg_per_ordenar, int num_linies)
+void OrdenaNouAlum(t_movi * reg_per_ordenar, int num_linies)
 {
   int i, j;
   for (i = 0; i < num_linies - 1; i++)

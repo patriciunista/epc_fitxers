@@ -8,6 +8,13 @@
 #define ANT_ALUM_FILE "registres/ANT_ALUM.dat" // ordenat per el num matricula
 #define FICH_MOVI_FILE "registres/FICH_MOVI.dat" // ordenat per el mv_nmat
 #define FICH_ALUM_FILE "registres/FICH_ALUM.dat" // ordenat per el alu_nmat
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
 
 typedef struct // Definicio del registre fitxer ANT_ALUM
 {
@@ -40,8 +47,8 @@ void MostraRegistres(char tipus);
 void PintaMenu();
 void MostraAlumne(t_alum alumne);
 void MostraNouAlumne(t_movi nou_alumne);
-void OrdenaAlum(t_alum *reg_per_ordenar, int num_linies);
-void OrdenaNouAlum(t_movi *reg_per_ordenar, int num_linies);
+void OrdenaAlum(t_alum * reg_per_ordenar, int num_linies);
+void OrdenaNouAlum(t_movi * reg_per_ordenar, int num_linies);
 int ProcesaDades();
 
 #endif
