@@ -373,7 +373,7 @@ int ProcesaDades()
                         fclose(temp);
                     } 
                     else //si no hi ha cap registre en el fitxer nou
-                        MostraError('r');
+                        MostraError('r'); 
 
                     fclose(nou_fitxer);
 
