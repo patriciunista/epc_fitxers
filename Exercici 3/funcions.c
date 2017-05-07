@@ -38,180 +38,259 @@ void MostraError(char error)
         printf("\nHi ha hagut un error al procesar la modificacio del registre.\n\n");
     else if(error == 'M')
         printf("\nNumero de matricula ja registrat, utilitzi la opcio per a modificar alta.\n\n");
+    else if(error == 'N')
+        printf("\nError, el camp no pot contenir lletres.\n\n");
+    else if(error == 'e')
+        printf("\nError, el numero de matricula de l'alumne que voleu modificar no esta assignat.\n\n");
+    else if(error == 'E')
+        printf("\nSiusplau, introdueixi un numero de matricula existent.\n\n");
+
 
     printf(ANSI_COLOR_RESET);
     getchar();
 }
 
-
-t_alum AltaAlumne(t_alum alumne)
+void MostraSucces(char * succes)
 {
-    Neteja('P');
-    int siono, repetit;
-    do
-    {
-        printf("Digues matricula alumne (3 digits): ");
-        scanf("%d%*c", &alumne.ANT_NMAT);
-        if (!(alumne.ANT_NMAT >= 0) || !(alumne.ANT_NMAT < 1000))
-            MostraError('n');
-
-    } while (!(alumne.ANT_NMAT >= 0) || !(alumne.ANT_NMAT < 1000));
-
-    printf("Digues nom alumne: ");
-    scanf("%[^\n]%*c", alumne.ANT_NOMB);
-
-    do
-    {
-        printf("Digues si s'ha efectuat reserva (0 o 1): ");
-        scanf("%d%*c", &siono);
-        if (siono == 0 || siono == 1)
-            alumne.ANT_RESERV = siono;
-        else
-            MostraError('I');
-
-    } while (siono != 0 && siono != 1);
-
-    printf("Digues adresa alumne: ");
-    scanf("%[^\n]%*c", alumne.ANT_DIR);
-    printf("Digues numero de faltes: ");
-    scanf("%d", &alumne.ANT_NFALT);
-    printf("Digues numero de suspeses: ");
-    scanf("%d", &alumne.ANT_NSUSP);
-    return alumne;
-}
-
-t_movi AltaNouAlumne(t_movi nou_alumne)
-{
-    Neteja('P');
-    do
-    {
-        printf("Digues matricula alumne (3 digits): ");
-        scanf("%d%*c", &nou_alumne.MV_NMAT);
-        if (!(nou_alumne.MV_NMAT >= 0) || !(nou_alumne.MV_NMAT < 1000))
-            MostraError('n');
-
-    } while (!(nou_alumne.MV_NMAT >= 0) || !(nou_alumne.MV_NMAT < 1000));
-
-    printf("Digues nom alumne: ");
-    scanf("%[^\n]%*c", nou_alumne.MV_NOMB);
-    printf("Digues adresa alumne: ");
-    scanf("%[^\n]%*c", nou_alumne.MV_DIR);
-    do
-    {
-        printf("Digues si es una alta o una modificacio (A/M): ");
-        scanf("%c%*c", &nou_alumne.MV_TIP);
-        if (nou_alumne.MV_TIP != 'M' && nou_alumne.MV_TIP != 'A')
-            MostraError('I');
-
-    } while(nou_alumne.MV_TIP != 'M' && nou_alumne.MV_TIP != 'A');
-
-    return nou_alumne;
+    printf(ANSI_COLOR_GREEN);
+    printf("%s", succes);
+    printf(ANSI_COLOR_RESET);
 }
 
 
 void AfegirRegistreAlum(char * path, t_alum registre)
 {
     FILE * fitxer;
-    FILE * temp;
-    fitxer = fopen(path, "a");
-    int num_linies = 0, i;
     t_alum reg_temp, reg_a_ordenar[1000];
-
-    /** escriptura del fitxer **/
-    fwrite(&registre, sizeof(t_alum), 1, fitxer);
-    fclose(fitxer);
-
-    /** ordenacio del fitxer **/
-    fitxer = fopen(path, "r");
-
-    //contem les linies, no es molt eficient pero es necessari
-    while(fread(&reg_temp, sizeof(reg_temp), 1, fitxer) > 0)
+    int siono, repetit, existeix, num_linies = 0, i;
+    char continuar;
+    do
     {
-        reg_a_ordenar[num_linies] = reg_temp;
+        Neteja('P');
+        /** lectura del fitxer **/
+        fitxer = fopen(path, "r");
+
+        //contem les linies i llegim el contingut guardantlo en un vector
+        while(fread(&reg_temp, sizeof(reg_temp), 1, fitxer) > 0)
+        {
+            reg_a_ordenar[num_linies] = reg_temp;
+            num_linies++;
+        }
+        fclose(fitxer);
+
+        /** captura de dades **/
+        // Demanem al usuari les dades del alumne
+        do
+        {
+            existeix = 0;
+            printf("Digues matricula alumne (3 digits): ");
+            scanf("%d%*c", &registre.ANT_NMAT);
+            // comprovem que sigui de 3 digits
+            if (!(registre.ANT_NMAT >= 0) || !(registre.ANT_NMAT < 1000))
+                MostraError('n');
+
+            //comprovem que no existeixi ja
+            for (i = 0; i < num_linies; i++)
+            {
+                if (registre.ANT_NMAT == reg_a_ordenar[i].ANT_NMAT)
+                {
+                    existeix = 1;
+                    MostraError('M');
+                }
+            }
+        } while (!(registre.ANT_NMAT >= 0) || !(registre.ANT_NMAT < 1000) || existeix);
+
+        printf("Digues nom alumne: ");
+        scanf("%[^\n]%*c", registre.ANT_NOMB);
+        do
+        {
+            printf("Digues si s'ha efectuat reserva (0 o 1): ");
+            scanf("%d%*c", &siono);
+            if (siono == 0 || siono == 1)
+                registre.ANT_RESERV = siono;
+            else
+                MostraError('I');
+
+        } while (siono != 0 && siono != 1);
+
+        printf("Digues adresa alumne: ");
+        scanf("%[^\n]%*c", registre.ANT_DIR);
+        printf("Digues numero de faltes: ");
+        scanf("%d%*c", &registre.ANT_NFALT);
+        printf("Digues numero de suspeses: ");
+        scanf("%d%*c", &registre.ANT_NSUSP);
+
+        //afegim el registre al nostre vector
+        reg_a_ordenar[num_linies] = registre;
         num_linies++;
-    }
-    fclose(fitxer);
 
-    //ordenem el vector que conte tots els registres
-    OrdenaAlum(reg_a_ordenar, num_linies);
+        /** ordenacio del fitxer **/
+        //ordenem el vector que conte tots els registres
+        OrdenaAlum(reg_a_ordenar, num_linies);
 
-    temp = fopen("temp/registre_alum.tmp", "w");
-    for (i = 0; i < num_linies; i++)
-        fwrite(&reg_a_ordenar[i], sizeof(t_alum), 1, temp);
+        /** escriptura del fitxer **/
+        fitxer = fopen(path, "w");
+        for (i = 0; i < num_linies; i++)
+            fwrite(&reg_a_ordenar[i], sizeof(t_alum), 1, fitxer);
 
-    fclose(temp);
+        fclose(fitxer);
 
-    fitxer = fopen(path, "w");
-    temp = fopen("temp/registre_alum.tmp", "r");
+        MostraSucces("\nDades introduides correctament!\n\n");
+        getchar();
 
-    while(fread(&reg_temp, sizeof(reg_temp), 1, temp) > 0)
-        fwrite(&reg_temp, sizeof(t_alum), 1, fitxer);
-
-    fclose(fitxer);
-    fclose(temp);
-
-    printf("\nDades introduides correctament!\n\n");
-    getchar();
+        printf("Voleu continuar introduint dades? (S/N): ");
+        scanf("%c%*c", &continuar);
+    } while (continuar == 'S' || continuar == 's');
 }
 
 void AfegirRegistreNouAlum(char * path, t_movi registre)
 {
-    FILE * fitxer;
-    FILE * temp;
-    fitxer = fopen(path, "a");
-    int num_linies = 0, i;
+    FILE * fitxer, * fitxer2;
+    int num_linies = 0, num_linies2 = 0, i, existeix;
+    char continuar;
     t_movi reg_temp, reg_a_ordenar[1000];
+    t_alum reg_temp2, reg_comprovar[1000];
+    do
+    {
+        Neteja('P');
+        /** lectura del fitxer **/
+        fitxer = fopen(path, "r");
 
-    /** escriptura del fitxer **/
-    fwrite(&registre, sizeof(t_movi), 1, fitxer);
-    fclose(fitxer);
+        //contem les linies i llegim el contingut guardantlo en vectors
+        while(fread(&reg_temp, sizeof(reg_temp), 1, fitxer) > 0)
+        {
+            reg_a_ordenar[num_linies] = reg_temp;
+            num_linies++;
+        }
+        fclose(fitxer);
 
-    /** ordenacio del fitxer **/
-    fitxer = fopen(path, "r");
+        fitxer2 = fopen(ANT_ALUM_FILE, "r");
+        while(fread(&reg_temp2, sizeof(reg_temp2), 1, fitxer2) > 0)
+        {
+            reg_comprovar[num_linies2] = reg_temp2;
+            num_linies2++;
+        }
+        fclose(fitxer2);
 
-    //contem les linies, no es molt eficient pero es necessari
-    while(fread(&reg_temp, sizeof(reg_temp), 1, fitxer) > 0){
-        reg_a_ordenar[num_linies] = reg_temp;
+
+        /** captura de dades **/
+        // Demanem al usuari les dades del alumne a donar d'alta
+        do
+        {
+            printf("Digues matricula alumne (3 digits): ");
+            scanf("%d%*c", &registre.MV_NMAT);
+            if (!(registre.MV_NMAT >= 0) || !(registre.MV_NMAT < 1000))
+                MostraError('n');
+
+        } while (!(registre.MV_NMAT >= 0) || !(registre.MV_NMAT < 1000));
+
+        printf("Digues nom alumne: ");
+        scanf("%[^\n]%*c", registre.MV_NOMB);
+        printf("Digues adresa alumne: ");
+        scanf("%[^\n]%*c", registre.MV_DIR);
+        do
+        {
+            printf("Digues si es una alta o una modificacio (A/M): ");
+            scanf("%c%*c", &registre.MV_TIP);
+            if (registre.MV_TIP != 'M' && registre.MV_TIP != 'A')
+                MostraError('I');
+
+        } while(registre.MV_TIP != 'M' && registre.MV_TIP != 'A');
+
+        //en cas de que sigui una modificacio, comprovem que tenim el num ja assignat
+        if(registre.MV_TIP = 'M')
+        {
+            existeix = 0;
+            for (i = 0; i < num_linies2; i++)
+            {
+                if (registre.MV_NMAT == reg_comprovar[i].ANT_NMAT)
+                    existeix = 1;
+            }
+
+            if(!existeix)
+            {
+                int tria;
+                do
+                {
+                    MostraError('e');
+                    printf("Que voleu fer?\n");
+                    printf("[1] Modificar la matricula.\n");
+                    printf("[2] Donar d'alta ĺ'alumne.\n");
+                    printf("[3] Cap, sortir.\n");
+                    printf("Tria: ");
+                    scanf("%d%*c", &tria);
+
+                    switch(tria)
+                    {
+                        case 1:
+                            do
+                            {
+                                existeix = 0;
+                                printf("Digues matricula alumne (3 digits): ");
+                                scanf("%d%*c", &registre.MV_NMAT);
+                                if (!(registre.MV_NMAT >= 0) || !(registre.MV_NMAT < 1000))
+                                    MostraError('n');
+
+                                for (i = 0; i < num_linies2; i++)
+                                {
+                                    if (registre.MV_NMAT == reg_comprovar[i].ANT_NMAT)
+                                    {
+                                        existeix = 1;
+                                    }
+                                }
+                                if (!existeix)
+                                    MostraError('E');
+                            } while (!(registre.MV_NMAT >= 0) || !(registre.MV_NMAT < 1000) || !existeix);
+                            
+                            break;
+
+                        case 2:
+                            registre.MV_TIP = 'A';
+                            printf("\nEs donara d'alta l'alumne.\n");    
+                            break;
+                        case 3:
+                            return;
+                            break;
+                        default:
+                            MostraError('o');
+                    }
+                } while (tria != 1 && tria != 2 && tria != 3);
+            }
+        }
+
+        //afegim el registre al vector que conte tota la informacio
+        reg_a_ordenar[num_linies] = registre;
         num_linies++;
-    }
-    fclose(fitxer);
 
-    //ordenem el vector que conte tots els registres
-    OrdenaNouAlum(reg_a_ordenar, num_linies);
+        /** ordenacio del fitxer **/
+        //ordenem el vector que conte tots els registres
+        OrdenaNouAlum(reg_a_ordenar, num_linies);
 
-    temp = fopen("temp/registre_nou_alum.tmp", "w");
-    for (i = 0; i < num_linies; i++)
-        fwrite(&reg_a_ordenar[i], sizeof(t_movi), 1, temp);
+        /** escriptura del fitxer **/
+        fitxer = fopen(path, "w");
+        for (i = 0; i < num_linies; i++)
+            fwrite(&reg_a_ordenar[i], sizeof(t_movi), 1, fitxer);
 
-    fclose(temp);
+        fclose(fitxer);
 
-    fitxer = fopen(path, "w");
-    temp = fopen("temp/registre_nou_alum.tmp", "r");
+        MostraSucces("\nDades introduides correctament!\n\n");
+        getchar();
 
-    while(fread(&reg_temp, sizeof(reg_temp), 1, temp) > 0)
-        fwrite(&reg_temp, sizeof(t_movi), 1, fitxer);
-
-    fclose(fitxer);
-    fclose(temp);
-
-    printf("\nDades introduides correctament!\n\n");
-    getchar();
-}
-
-void ModificarRegistre(t_alum adresa, t_movi adresaNova){
-    strcpy(adresa.ANT_DIR, adresaNova.MV_DIR);
+        printf("Voleu continuar introduint dades? (S/N): ");
+        scanf("%c%*c", &continuar);
+    } while (continuar == 'S' || continuar == 's');
 }
 
 void MostraBaixaAlum(t_alum registre, char * motiu)
 {
-    printf("\nL'alumne %s amb matricula %d es donat de baixa per %s. \n", registre.ANT_NOMB, registre.ANT_NMAT, motiu);
+    printf("\nL'alumne %s amb matricula %03d es donat de baixa per %s. \n", registre.ANT_NOMB, registre.ANT_NMAT, motiu);
 }
 
 void MostraRegistres(char tipus)
 {
-    FILE * f1;
-    FILE * f2;
-    FILE * f3;
+    FILE * f1, * f2, * f3;
+    t_alum alumne;
+    t_movi nou_alumne;
     int error_fitxer_a = 0, error_fitxer_na = 0, error_fitxer_nfg = 0;
 
     if(fopen(ANT_ALUM_FILE, "r") != NULL) f1 = fopen(ANT_ALUM_FILE, "r");
@@ -222,9 +301,6 @@ void MostraRegistres(char tipus)
 
     if(fopen(FICH_ALUM_FILE, "r") != NULL) f3 = fopen(FICH_ALUM_FILE, "r");
     else error_fitxer_nfg = 1;
-
-    t_alum alumne;
-    t_movi nou_alumne;
 
     if (tipus == 'A')
     {
@@ -289,9 +365,8 @@ void MostraRegistres(char tipus)
 
 int ProcesaDades()
 {
-    FILE * fitxer_alumnes;
-    FILE * fitxer_nous_alumnes;
-    FILE * nou_fitxer;
+    Neteja('P');
+    FILE * fitxer_alumnes, * fitxer_nous_alumnes, * nou_fitxer;
     int error_fitxer_a = 0, error_fitxer_na = 0, error_proces = 0, nou_fitxer_tancat = 0;
     t_alum alumne;
     t_movi nou_alumne;
@@ -407,7 +482,7 @@ int ProcesaDades()
                     {
                         printf("\n");
                         MostraError('t');
-                        printf("Matricula alumne proporcionada: %d. Nom: %s", nou_alumne.MV_NMAT, nou_alumne.MV_NOMB);
+                        printf("Matricula alumne proporcionada: %03d. Nom: %s", nou_alumne.MV_NMAT, nou_alumne.MV_NOMB);
                     }
                 }
             } // endwhile
@@ -435,30 +510,28 @@ void PintaMenu()
     t_movi nAlum;
     int tria, processament;
     char tipusReg;
-    printf("Menu Principal\n");
-    printf("[1] Alta Alumne\n");
-    printf("[2] Alta Nou Alumne\n");
-    printf("[3] Procesa les dades\n");
-    printf("[4] Mostrar Registres\n");
-    printf("[5] Sortir\n");
-    printf("Digues que vols fer: ");
+    printf("--------------------\n   Menu Principal \n--------------------\n\n");
+    printf(" [1] Introduir alumnes ja registrats\n");
+    printf(" [2] Alta / Modificacio Alumne\n");
+    printf(" [3] Procesa els registres\n");
+    printf(" [4] Mostrar Registres\n");
+    printf(" [5] Sortir\n");
+    printf("\nDigues que vols fer: ");
     scanf("%d%*c", &tria);
 
     switch(tria)
     {
         case 1:
-            vAlum = AltaAlumne(vAlum);
             AfegirRegistreAlum(ANT_ALUM_FILE, vAlum);
             break;
         case 2:
-            nAlum = AltaNouAlumne(nAlum);
             AfegirRegistreNouAlum(FICH_MOVI_FILE, nAlum);
             break;
         case 3:
             processament = ProcesaDades();
             if (processament)
             {
-                printf("\n\n\nDades introduides correctament!\n\n");
+                MostraSucces("\n\n\nDades introduides correctament!\n\n");
                 getchar();
             }
             else
@@ -490,7 +563,6 @@ void PintaMenu()
 
     PintaMenu();
 }
-
 
 void OrdenaAlum(t_alum * reg_per_ordenar, int num_linies)
 {
@@ -531,18 +603,20 @@ void OrdenaNouAlum(t_movi * reg_per_ordenar, int num_linies)
 
 void MostraAlumne(t_alum alumne)
 {
-    printf("Matricula alumne (3 digits): %3d\n", alumne.ANT_NMAT);
+    printf("Matricula alumne (3 digits): %03d\n", alumne.ANT_NMAT);
     printf("Nom alumne: %s\n",  alumne.ANT_NOMB);
     printf("Ha efectuat reserva: %d\n", alumne.ANT_RESERV);
     printf("Adresa alumne: %s\n", alumne.ANT_DIR);
     printf("Numero de faltes: %d\n", alumne.ANT_NFALT);
-    printf("Numero de suspeses: %d\n\n", alumne.ANT_NSUSP);
+    printf("Numero de suspeses: %d\n", alumne.ANT_NSUSP);
+    printf("-----------------------------------------\n");
 }
 
 void MostraNouAlumne(t_movi nou_alumne)
 {
-    printf("Matricula alumne (3 digits): %3d\n", nou_alumne.MV_NMAT);
+    printf("Matricula alumne (3 digits): %03d\n", nou_alumne.MV_NMAT);
     printf("Nom alumne: %s\n", nou_alumne.MV_NOMB);
     printf("Adresa alumne: %s\n", nou_alumne.MV_DIR);
-    printf("Modificacio / Alta: %c\n\n", nou_alumne.MV_TIP);
+    printf("Modificacio / Alta: %c\n", nou_alumne.MV_TIP);
+    printf("-----------------------------------------\n");
 }
