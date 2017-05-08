@@ -57,7 +57,6 @@ void MostraSucces(char * succes)
     printf(ANSI_COLOR_RESET);
 }
 
-
 void AfegirRegistreAlum(char * path, t_alum registre)
 {
     FILE * fitxer;
@@ -502,7 +501,6 @@ int ProcesaDades()
     return 1;
 }
 
-
 void PintaMenu()
 {
     Neteja('P');
@@ -581,7 +579,6 @@ void OrdenaAlum(t_alum * reg_per_ordenar, int num_linies)
     }
   }
 }
-
 
 void OrdenaNouAlum(t_movi * reg_per_ordenar, int num_linies)
 {

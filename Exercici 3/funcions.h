@@ -22,7 +22,6 @@ typedef struct // Definicio del registre fitxer ANT_ALUM
     int ANT_NSUSP;
 } t_alum;
 
-
 typedef struct // Definicio del registre fitxer FICH_MOVI
 {
     int MV_NMAT;//[MAX_DIGITS];
@@ -30,7 +29,6 @@ typedef struct // Definicio del registre fitxer FICH_MOVI
     char MV_DIR[MAX_CARACTERS];
     char MV_TIP;
 } t_movi;
-
 
 void Neteja(char opcio);
 void AfegirRegistreAlum(char * path, t_alum registre);
