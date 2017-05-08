@@ -29,7 +29,7 @@ void MostraError(char error)
     else if(error == 'r')
         printf("\nEl fitxer no conte cap registre.\n\n");
     else if(error == 'n')
-        printf("\nLa matricula es incorrecte, ha de contenir 3 digits.\n\n");
+        printf("\nLa matricula es incorrecte, ha de contenir 3 digits.\n");
     else if(error == 'p')
         printf("\nError en el processament de les dades.\n\n");
     else if(error == 't')
@@ -37,14 +37,17 @@ void MostraError(char error)
     else if(error == 'R')
         printf("\nHi ha hagut un error al procesar la modificacio del registre.\n\n");
     else if(error == 'M')
-        printf("\nNumero de matricula ja registrat, utilitzi la opcio per a modificar alta.\n\n");
+        printf("\nNumero de matricula ja registrat, utilitzi la opcio per a modificar alta.\n");
     else if(error == 'N')
-        printf("\nError, el camp no pot contenir lletres.\n\n");
+        printf("\nError, el camp no pot contenir lletres.\n");
     else if(error == 'e')
         printf("\nError, el numero de matricula de l'alumne que voleu modificar no esta assignat.\n\n");
     else if(error == 'E')
         printf("\nSiusplau, introdueixi un numero de matricula existent.\n\n");
-
+    else if(error == 'f')
+        printf("\nEl numero introduit supera el numero de faltes possibles.\n");
+    else if(error == 's')
+        printf("\nEl numero introduit es major que el de les assignatures cursades (12).\n");
 
     printf(ANSI_COLOR_RESET);
     getchar();
@@ -114,10 +117,23 @@ void AfegirRegistreAlum(char * path, t_alum registre)
 
         printf("Digues adresa alumne: ");
         scanf("%[^\n]%*c", registre.ANT_DIR);
-        printf("Digues numero de faltes: ");
-        scanf("%d%*c", &registre.ANT_NFALT);
-        printf("Digues numero de suspeses: ");
-        scanf("%d%*c", &registre.ANT_NSUSP);
+        do
+        {
+            printf("Digues numero de faltes: ");
+            scanf("%d%*c", &registre.ANT_NFALT);
+            if (registre.ANT_NFALT < 0 || registre.ANT_NFALT > 100)
+                MostraError('f');
+
+        } while (registre.ANT_NFALT < 0 || registre.ANT_NFALT > 100);
+
+        do
+        {
+            printf("Digues numero de suspeses: ");
+            scanf("%d%*c", &registre.ANT_NSUSP);
+            if (registre.ANT_NSUSP < 0 || registre.ANT_NSUSP > 12)
+                MostraError('s');
+
+        } while (registre.ANT_NSUSP < 0 || registre.ANT_NSUSP > 12);
 
         //afegim el registre al nostre vector
         reg_a_ordenar[num_linies] = registre;
@@ -197,7 +213,7 @@ void AfegirRegistreNouAlum(char * path, t_movi registre)
         } while(registre.MV_TIP != 'M' && registre.MV_TIP != 'A');
 
         //en cas de que sigui una modificacio, comprovem que tenim el num ja assignat
-        if(registre.MV_TIP = 'M')
+        if(registre.MV_TIP == 'M')
         {
             existeix = 0;
             for (i = 0; i < num_linies2; i++)
