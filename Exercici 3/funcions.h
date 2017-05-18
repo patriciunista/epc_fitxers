@@ -5,6 +5,7 @@
 
 #define MAX_CARACTERS 30
 #define MAX_DIGITS 3
+#define MAX_REGISTRES 1000
 #define ANT_ALUM_FILE "registres/ANT_ALUM.dat" // ordenat per el num matricula
 #define FICH_MOVI_FILE "registres/FICH_MOVI.dat" // ordenat per el mv_nmat
 #define FICH_ALUM_FILE "registres/FICH_ALUM.dat" // ordenat per el alu_nmat

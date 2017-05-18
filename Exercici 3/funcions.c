@@ -63,22 +63,35 @@ void MostraSucces(char * succes)
 void AfegirRegistreAlum(char * path, t_alum registre)
 {
     FILE * fitxer;
-    t_alum reg_temp, reg_a_ordenar[1000];
-    int siono, repetit, existeix, num_linies = 0, i;
+    t_alum reg_temp, reg_a_ordenar[MAX_REGISTRES];
+    int siono, existeix, num_linies, i, lectura;
     char continuar;
     do
-    {
+    {   
+        num_linies = 0;
+        lectura = 1;
         Neteja('P');
         /** lectura del fitxer **/
-        fitxer = fopen(path, "r");
-
-        //contem les linies i llegim el contingut guardantlo en un vector
-        while(fread(&reg_temp, sizeof(reg_temp), 1, fitxer) > 0)
+        if(fopen(path, "r") != NULL) 
         {
-            reg_a_ordenar[num_linies] = reg_temp;
-            num_linies++;
+            fitxer = fopen(path, "r");
         }
-        fclose(fitxer);
+        else 
+        {
+            fitxer = fopen(path, "w");
+            lectura = 0;
+        }
+
+        if (lectura)
+        {
+            //contem les linies i llegim el contingut guardantlo en un vector
+            while(fread(&reg_temp, sizeof(reg_temp), 1, fitxer) > 0)
+            {
+                reg_a_ordenar[num_linies] = reg_temp;
+                num_linies++;
+            }
+            fclose(fitxer);
+        }
 
         /** captura de dades **/
         // Demanem al usuari les dades del alumne
@@ -161,31 +174,56 @@ void AfegirRegistreAlum(char * path, t_alum registre)
 void AfegirRegistreNouAlum(char * path, t_movi registre)
 {
     FILE * fitxer, * fitxer2;
-    int num_linies = 0, num_linies2 = 0, i, existeix;
+    int num_linies, num_linies2, i, existeix, lectura, lectura2;
     char continuar;
-    t_movi reg_temp, reg_a_ordenar[1000];
-    t_alum reg_temp2, reg_comprovar[1000];
+    t_movi reg_temp, reg_a_ordenar[MAX_REGISTRES];
+    t_alum reg_temp2, reg_comprovar[MAX_REGISTRES];
     do
     {
+        num_linies = 0;
+        num_linies2 = 0;
+        lectura = 1;
+        lectura2 = 1;
+
         Neteja('P');
         /** lectura del fitxer **/
-        fitxer = fopen(path, "r");
-
-        //contem les linies i llegim el contingut guardantlo en vectors
-        while(fread(&reg_temp, sizeof(reg_temp), 1, fitxer) > 0)
+        if(fopen(path, "r") != NULL) 
         {
-            reg_a_ordenar[num_linies] = reg_temp;
-            num_linies++;
+            fitxer = fopen(path, "r");
         }
-        fclose(fitxer);
-
-        fitxer2 = fopen(ANT_ALUM_FILE, "r");
-        while(fread(&reg_temp2, sizeof(reg_temp2), 1, fitxer2) > 0)
+        else 
         {
-            reg_comprovar[num_linies2] = reg_temp2;
-            num_linies2++;
+            fitxer = fopen(path, "w");
+            lectura = 0;
         }
-        fclose(fitxer2);
+
+        if(fopen(ANT_ALUM_FILE, "r") != NULL) 
+            fitxer2 = fopen(ANT_ALUM_FILE, "r");
+        else 
+            lectura2 = 0;
+
+
+        if (lectura)
+        {
+            //contem les linies i llegim el contingut guardantlo en vectors
+            while(fread(&reg_temp, sizeof(reg_temp), 1, fitxer) > 0)
+            {
+                reg_a_ordenar[num_linies] = reg_temp;
+                num_linies++;
+            }
+            fclose(fitxer);
+
+            if (lectura2)
+            {   
+                fitxer2 = fopen(ANT_ALUM_FILE, "r");
+                while(fread(&reg_temp2, sizeof(reg_temp2), 1, fitxer2) > 0)
+                {
+                    reg_comprovar[num_linies2] = reg_temp2;
+                    num_linies2++;
+                }
+                fclose(fitxer2);
+            }
+        }
 
 
         /** captura de dades **/
@@ -303,6 +341,7 @@ void MostraBaixaAlum(t_alum registre, char * motiu)
 
 void MostraRegistres(char tipus)
 {
+    Neteja('P');
     FILE * f1, * f2, * f3;
     t_alum alumne;
     t_movi nou_alumne;
@@ -447,8 +486,8 @@ int ProcesaDades()
                 }
                 else //si es una modificacio
                 {
-                    int alumneTrobat = 0;
-                    FILE * temp = fopen("temp/modificacio_reg.tmp", "w");
+                    int alumneTrobat = 0, linia=0, i;
+                    t_alum temp[MAX_REGISTRES];
                     nou_fitxer = fopen(FICH_ALUM_FILE, "r");
                     nou_fitxer_tancat = 0;
 
@@ -462,33 +501,27 @@ int ProcesaDades()
                                 strcpy(alumne.ANT_DIR, nou_alumne.MV_DIR);
                                 alumneTrobat = 1;
                             }
-                            fwrite(&alumne, sizeof(t_alum), 1, temp);
+                            temp[linia] = alumne;
+                            linia++;
                         }
                     }
                     else //si no hi ha cap registre en el fitxer nou
                         MostraError('r');
 
-                    fclose(temp);
                     if(!nou_fitxer_tancat) fclose(nou_fitxer);
                     nou_fitxer_tancat = 1;
 
                     if (alumneTrobat)
                     {
                         /* si hem trobat alumne, per tant em modificat, copiem les noves dades del fitxer temporal */
-                        nou_fitxer = fopen(FICH_ALUM_FILE, "w");
+                        if(!nou_fitxer_tancat) fclose(nou_fitxer);
+                        fopen(FICH_ALUM_FILE, "w");
                         nou_fitxer_tancat = 0;
-                        temp = fopen("temp/modificacio_reg.tmp", "r"); 
 
-                        if (fread(&alumne, sizeof(alumne), 1, temp) > 0)
-                        {
-                            rewind(temp);
-                            while(fread(&alumne, sizeof(alumne), 1, temp) > 0)
-                                fwrite(&alumne, sizeof(t_alum), 1, nou_fitxer);
+                        for (i = 0; i < linia; i++){
+                            fwrite(&temp[i], sizeof(t_alum), 1, nou_fitxer);
                         }
-                        else
-                            MostraError('R');
 
-                        fclose(temp);
                         if(!nou_fitxer_tancat) fclose(nou_fitxer);
                         nou_fitxer_tancat = 1;
 
@@ -507,7 +540,6 @@ int ProcesaDades()
             MostraError('r');
             error_proces = 1;
         }
-
         fclose(fitxer_nous_alumnes);
     }
 
@@ -545,7 +577,7 @@ void PintaMenu()
             processament = ProcesaDades();
             if (processament)
             {
-                MostraSucces("\n\n\nDades introduides correctament!\n\n");
+                MostraSucces("\n\n\nDades processades correctament!\n\n");
                 getchar();
             }
             else
